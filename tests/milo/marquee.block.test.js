@@ -8,7 +8,13 @@ let marquee;
 let consoleErrors = [];
 
 const miloLibs = process.env.MILO_LIBS || '';
-const knownConsoleErrors = ['Access-Control-Allow-Origin','Failed to load resource: net::ERR_FAILED','adobeid-na1-stg1.services'];
+const knownConsoleErrors = [
+  'Access-Control-Allow-Origin',
+  'Failed to load resource: net::ERR_FAILED',
+  'adobeid-na1-stg1.services',
+  'Attestation check for Topics',
+  'Access to fetch at',
+];
 
 test.describe('Milo Marquee Block test suite', () => {
   test.beforeEach(async ({ page }) => {

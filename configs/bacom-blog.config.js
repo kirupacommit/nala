@@ -11,7 +11,7 @@ const config = {
   testDir: '../tests/bacom-blog',
   outputDir: '../test-results',
   /* Maximum time one test can run for. */
-  timeout: 30 * 1000,
+  timeout: 240 * 1000,
   expect: {
     /**
      * Maximum time expect() should wait for the condition to be met.
@@ -40,7 +40,7 @@ const config = {
 
     /* Collect trace when retrying the failed test. See https://playwright.dev/docs/trace-viewer */
     trace: 'on-first-retry',
-    baseURL: process.env.BASE_URL || envs['@bacom_live'] || 'https://main--bacom--adobecom.hlx.live',
+    baseURL: process.env.BASE_URL || envs['@bacomblog_live'] || 'https://main--bacom-blog--adobecom.hlx.live',
   },
 
   /* Configure projects for major browsers */

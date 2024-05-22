@@ -132,3 +132,9 @@ Test.pptx
 nala-results.json
 configs/screenshots/
 configs/test-html-results/
+/results/bacom-blog/**.json
+
+# Browserstack files
+browserstackSetupConfig.json
+configs/playwright-browserstack-sdk.config.js
+playwright-browserstack-sdk.config.temp.json
