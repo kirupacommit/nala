@@ -1,7 +1,7 @@
 /* eslint-disable no-await-in-loop */
 /* eslint-disable no-restricted-syntax */
 const { WebUtil } = require('../../libs/webutil.js');
-const { take } = require('../../libs/visualutil.js');
+const { take } = require('../../libs/screenshot/take.js');
 
 export default class Quiz {
   constructor(page) {
@@ -15,6 +15,9 @@ export default class Quiz {
     + '//div[contains(@data-path,"express-product")]//h1');
     this.uarResult3 = page.locator('//div[contains(@data-path,"card")]//h3');
     this.screenshots = [];
+    this.quizInput = page.locator('#quiz-input');
+    this.continueButton = page.getByRole('button', { name: 'Continue' });
+    this.carouselNext = page.locator('.carousel-arrow.arrow-next');
   }
 
   /**
@@ -101,14 +104,17 @@ export default class Quiz {
     let fileName;
 
     if (answer === 'result') {
-      fileName = `${keyNumber} - ${version} - ${project} - result.png`;
+      fileName = `${keyNumber} - ${version} - ${project} - result`;
     } else {
-      fileName = `${keyNumber} - ${version} - ${project} - ${index} - ${answer.replace('/', '')}.png`;
+      fileName = `${keyNumber} - ${version} - ${project} - ${index} - ${answer.replace('/', '')}`;
     }
 
-    await take(this.page, folderPath, fileName);
+    const result = await take(this.page, folderPath, fileName, {
+      fullPage: true,
+      style: '.global-navigation,.global-footer { display: none; }',
+    });
 
-    this.screenshots.push(fileName);
+    this.screenshots.push(result);
   }
 
   /**
@@ -212,5 +218,123 @@ export default class Quiz {
 
     console.info(`==========new============\n${newProduct.sort().join('')}`);
     return newProduct.sort().join('');
+  }
+
+  async checkQuizEntry(url, key, keyNumber, version, project, folderPath, isScreenshot = false) {
+    await this.page.goto(url);
+
+    const answers = key.split('>').map((x) => x.trim());
+    if (answers.length === 2) {
+      await this.quizInput.fill(answers[0]);
+      if (isScreenshot) {
+        await this.page.waitForTimeout(500);
+
+        const index = answers.indexOf(answers[0]);
+        await this.takeScreenshot(
+          keyNumber,
+          version,
+          index,
+          answers[0],
+          folderPath,
+          project,
+        );
+      }
+      await this.continueButton.click();
+      await this.selectAnswer(answers[1]);
+      if (isScreenshot) {
+        await this.page.waitForTimeout(500);
+
+        const index = answers.indexOf(answers[1]);
+        await this.takeScreenshot(
+          keyNumber,
+          version,
+          index,
+          answers[1],
+          folderPath,
+          project,
+        );
+      }
+      await this.resultButton.click();
+      if (isScreenshot) {
+        await this.page.waitForTimeout(1000);
+
+        await this.takeScreenshot(
+          keyNumber,
+          version,
+          0,
+          'result',
+          folderPath,
+          project,
+        );
+      }
+    } else {
+      for (const answer of answers) {
+        if (answer.includes('+')) {
+          const options = answer.split('+').map((x) => x.trim());
+          // select more than one answer
+          for (const option of options) {
+            if (option === 'PDFs' && project === 'iphone') {
+              this.carouselNext.click();
+              this.carouselNext.click();
+              this.carouselNext.click();
+            }
+            await this.selectAnswer(option);
+          }
+        } else {
+          // select one answer
+          await this.selectAnswer(answer);
+        }
+
+        if (answers.indexOf(answer) < answers.length - 1 && answers.indexOf(answer) !== 0) {
+          if (isScreenshot) {
+            await this.page.waitForTimeout(500);
+
+            const index = answers.indexOf(answer);
+            await this.takeScreenshot(
+              keyNumber,
+              version,
+              index,
+              answer,
+              folderPath,
+              project,
+            );
+          }
+          // click next button
+          await this.clickNextButton();
+        }
+
+        if (answers.indexOf(answer) === 0) {
+          if (isScreenshot) {
+            await this.page.waitForTimeout(500);
+
+            const index = answers.indexOf(answer);
+            await this.takeScreenshot(
+              keyNumber,
+              version,
+              index,
+              answer,
+              folderPath,
+              project,
+            );
+          }
+          await this.continueButton.click();
+        }
+      }
+
+      // click get your results button
+      await this.clickResultButton();
+      if (isScreenshot) {
+        await this.page.waitForTimeout(1000);
+
+        await this.takeScreenshot(
+          keyNumber,
+          version,
+          0,
+          'result',
+          folderPath,
+          project,
+        );
+      }
+    }
   }
 }
